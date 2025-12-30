@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>三層架構示範</title>
+</head>
+<body>
+    <h1>Todo List</h1>
+    
+    <input type="text" id="taskInput" placeholder="輸入新任務...">
+    <button onclick="addTodo()">新增</button>
+    <p id="errorMsg" style="color: red;"></p>
+
+    <ul id="list"></ul>
+
+    <script>
+        // 1. 讀取列表
+        async function loadTodos() {
+            const res = await fetch('/api/todos');
+            const data = await res.json();
+            const list = document.getElementById('list');
+            list.innerHTML = data.map(t => `<li>${t.id}: ${t.task}</li>`).join('');
+        }
+
+        // 2. 新增任務
+        async function addTodo() {
+            const input = document.getElementById('taskInput');
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerText = ""; // 清空錯誤
+
+            const res = await fetch('/api/todos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task: input.value })
+            });
+
+            const result = await res.json();
+
+            if (res.status === 201) {
+                input.value = ""; // 清空輸入框
+                loadTodos();      // 重新整理列表
+            } else {
+                errorMsg.innerText = `錯誤: ${result.error} (代碼: ${res.status})`;
+            }
+        }
+
+        loadTodos(); // 頁面載入時執行
+    </script>
+</body>
+</html>
